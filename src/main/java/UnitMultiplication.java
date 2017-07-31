@@ -58,19 +58,19 @@ public class UnitMultiplication {
             //separate transition cell from pr cell
             //multiply
             List<String> transitionCell = new ArrayList<String>();
-            double prcell = 0;
+            double prUnit = 0;
             for (Text value : values) {
                 if (value.toString().contains("=")) {
                     transitionCell.add(value.toString().trim());
                 }
                 else {
-                    prcell = Double.parseDouble(value.toString().trim());
+                    prUnit = Double.parseDouble(value.toString().trim());
                 }
             }
             for (String cell : transitionCell) {
                 String outputKey = cell.split("=")[0];
                 double relation = Double.parseDouble(cell.split("=")[1]);
-                String outputValue = String.valueOf(relation * prcell);
+                String outputValue = String.valueOf(relation * prUnit * (1 - beta));
                 context.write(new Text(outputKey), new Text(outputValue));
             }
         }
@@ -86,10 +86,12 @@ public class UnitMultiplication {
         Job job = Job.getInstance(configuration);
         job.setJarByClass(UnitMultiplication.class);
 
+//        ChainMapper.addMapper(job, TransitionMapper.class, Object.class, Text.class, Text.class, Text.class, configuration);
+//        ChainMapper.addMapper(job, PRMapper.class, Object.class, Text.class, Text.class, Text.class, configuration);
         ChainMapper.addMapper(job, TransitionMapper.class, Object.class, Text.class, Text.class, Text.class, configuration);
-        ChainMapper.addMapper(job, PRMapper.class, Object.class, Text.class, Text.class, Text.class, configuration);
 
         job.setReducerClass(MultiplicationReducer.class);
+
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
 
