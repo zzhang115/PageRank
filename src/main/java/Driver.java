@@ -8,7 +8,5 @@ public class Driver
 {
     public static void main(String[] args)
     {
-        List<String> list = new ArrayList<String>();
-        list.indexOf("abc");
     }
 }
