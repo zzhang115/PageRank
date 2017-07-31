@@ -6,6 +6,9 @@ import org.apache.hadoop.mapreduce.lib.chain.ChainMapper;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,6 +44,14 @@ public class UnitMultiplication {
     }
 
     public static class MultiplicationReducer extends Reducer<Text, Text, Text, Text> {
+        float beta;
+
+        @Override
+        protected void setup(Context context) throws IOException, InterruptedException {
+            Configuration configuration = context.getConfiguration();
+            beta = configuration.getFloat("beta", 0.2f);
+        }
+
         @Override
         protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             //key = 1 value = <2=1/4, 7=1/4, 8=1/4, 29=1/4, 1/6012>
@@ -65,7 +76,7 @@ public class UnitMultiplication {
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         Configuration configuration = new Configuration();
         Path transitionFilePath = new Path(args[0]);
         Path prFilePath = new Path(args[1]);
@@ -76,6 +87,16 @@ public class UnitMultiplication {
         job.setJarByClass(UnitMultiplication.class);
 
         ChainMapper.addMapper(job, TransitionMapper.class, Object.class, Text.class, Text.class, Text.class, configuration);
+        ChainMapper.addMapper(job, PRMapper.class, Object.class, Text.class, Text.class, Text.class, configuration);
 
+        job.setReducerClass(MultiplicationReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+
+        MultipleInputs.addInputPath(job, transitionFilePath, TextInputFormat.class, TransitionMapper.class);
+        MultipleInputs.addInputPath(job, prFilePath, TextInputFormat.class, PRMapper.class);
+
+        FileOutputFormat.setOutputPath(job, outputPath);
+        job.waitForCompletion(true);
     }
 }
