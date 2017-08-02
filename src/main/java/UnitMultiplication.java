@@ -31,8 +31,10 @@ public class UnitMultiplication {
             if (flowTo.length ==1 || flowTo[1].trim().equals("")) {
                return;
             }
+            System.out.println("transkey"+key);
             for (String to : tos) {
-                context.write(new Text(flow), new Text(to + "=" + (double)1 / tos.length));
+                System.out.println("trans--key:"+flow+" value:"+(double) 1 / tos.length);
+                context.write(new Text(flow), new Text(to + "=" + (double) 1 / tos.length));
             }
         }
     }
@@ -41,6 +43,7 @@ public class UnitMultiplication {
         @Override
         protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String[] pr = value.toString().trim().split("\t");
+            System.out.println("pr--key:"+key+" value:"+pr[1]);
             context.write(new Text(pr[0]), new Text(pr[1]));
         }
     }
@@ -61,7 +64,9 @@ public class UnitMultiplication {
             //multiply
             List<String> transitionCell = new ArrayList<String>();
             double prUnit = 0;
+            System.out.println("key:"+key);
             for (Text value : values) {
+                System.out.println(value);
                 if (value.toString().contains("=")) {
                     transitionCell.add(value.toString().trim());
                 }
@@ -79,22 +84,23 @@ public class UnitMultiplication {
     }
 
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        Configuration configuration = new Configuration();
         Path transitionFilePath = new Path(args[0]);
         Path prFilePath = new Path(args[1]);
         Path outputPath = new Path(args[2]);
         float beta = Float.parseFloat(args[3]);
+
+        Configuration configuration = new Configuration();
         configuration.setFloat("beta", beta);
         Job job = Job.getInstance(configuration);
         job.setJarByClass(UnitMultiplication.class);
+
         File file = new File(args[2]);
         if(file.exists())
         {
-            System.out.println("Output directory already exits, delete it.");
+            System.out.println("Output directory already exits!\nDelete previous output directory.");
             FileUtils.deleteDirectory(file);
         }
-//        ChainMapper.addMapper(job, TransitionMapper.class, Object.class, Text.class, Text.class, Text.class, configuration);
-//        ChainMapper.addMapper(job, PRMapper.class, Object.class, Text.class, Text.class, Text.class, configuration);
+
         ChainMapper.addMapper(job, TransitionMapper.class, Object.class, Text.class, Text.class, Text.class, configuration);
         ChainMapper.addMapper(job, PRMapper.class, Object.class, Text.class, Text.class, Text.class, configuration);
 
