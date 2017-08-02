@@ -31,7 +31,6 @@ public class UnitMultiplication {
             if (flowTo.length ==1 || flowTo[1].trim().equals("")) {
                return;
             }
-            System.out.println("transkey"+key);
             for (String to : tos) {
                 System.out.println("trans--key:"+flow+" value:"+(double) 1 / tos.length);
                 context.write(new Text(flow), new Text(to + "=" + (double) 1 / tos.length));
