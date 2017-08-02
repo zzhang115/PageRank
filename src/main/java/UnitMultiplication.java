@@ -68,8 +68,7 @@ public class UnitMultiplication {
                 System.out.println(value);
                 if (value.toString().contains("=")) {
                     transitionCell.add(value.toString().trim());
-                }
-                else {
+                } else {
                     prUnit = Double.parseDouble(value.toString().trim());
                 }
             }
@@ -94,9 +93,8 @@ public class UnitMultiplication {
         job.setJarByClass(UnitMultiplication.class);
 
         File file = new File(args[2]);
-        if(file.exists())
-        {
-            System.out.println("Output directory already exits!\nDelete previous output directory.");
+        if (file.exists()) {
+            System.out.println("Output1 directory already exits!\nDelete previous output directory.");
             FileUtils.deleteDirectory(file);
         }
 

@@ -1,3 +1,4 @@
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
@@ -8,31 +9,47 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
+import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
 
 /**
  * Created by zzc on 7/29/17.
  */
 public class UnitSum
 {
-    public static class SumMapper extends Mapper<Object, Text, Text, Text> {
+    public static class SumMapper extends Mapper<Object, Text, Text, DoubleWritable> {
         @Override
         protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String line = value.toString().trim();
-            System.out.println(line);
+            String flow = line.split("\t")[0].trim();
+            double UnitValue = Double.parseDouble(line.split("\t")[1].trim());
+            context.write(new Text(flow), new DoubleWritable(UnitValue));
         }
     }
 
-    public static class SumReducer extends Reducer<Object, Text, Text, Text> {
+    public static class SumReducer extends Reducer<Text, DoubleWritable, Text, DoubleWritable> {
         @Override
-        protected void reduce(Object key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-            super.reduce(key, values, context);
+        protected void reduce(Text key, Iterable<DoubleWritable> values, Context context) throws IOException, InterruptedException {
+            double valueSum = 0;
+            for(DoubleWritable value : values) {
+                valueSum += value.get();
+            }
+            DecimalFormat df = new DecimalFormat("#.0000");
+            valueSum = Double.valueOf(df.format(valueSum));
+            context.write(new Text(key), new DoubleWritable(valueSum));
         }
     }
+
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
         Path unitInputPath = new Path(args[0]);
-        Path unitoutputPath= new Path(args[1]);
+        Path unitOutputPath= new Path(args[1]);
 
+        File file = new File(args[1]);
+        if (file.exists()) {
+            System.out.println("Output2 directory already exists\nDelete previous output directory.");
+            FileUtils.deleteDirectory(file);
+        }
         Configuration configuration = new Configuration();
         Job job = Job.getInstance(configuration);
         job.setJarByClass(UnitSum.class);
@@ -44,7 +61,7 @@ public class UnitSum
         job.setOutputValueClass(DoubleWritable.class);
 
         FileInputFormat.addInputPath(job, unitInputPath);
-        FileOutputFormat.setOutputPath(job, unitoutputPath);
+        FileOutputFormat.setOutputPath(job, unitOutputPath);
         job.waitForCompletion(true);
     }
 }
