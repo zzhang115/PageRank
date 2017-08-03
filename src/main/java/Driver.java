@@ -20,7 +20,6 @@ import java.util.*;
  */
 public class Driver {
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-        // first task
         Path transitionFilePath = new Path(args[0]);
         Path prFilePath = new Path(args[1]);
         Path outputPath = new Path(args[2]);
